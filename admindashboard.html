@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TAPPEDIN.NL - Admin Discord Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      background: radial-gradient(circle, #fff96a, #fcd34d);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .login-box {
+      background: rgba(0, 0, 0, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 0 30px rgba(0,0,0,0.4);
+      border-radius: 20px;
+      padding: 50px 30px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      color: #000;
+      position: relative;
+      z-index: 2;
+    }
+
+    .logo {
+      font-size: 2.2em;
+      font-weight: 700;
+      color: #000;
+      margin-bottom: 20px;
+    }
+
+    .logo span {
+      font-size: 0.6em;
+      font-weight: 500;
+      letter-spacing: 3px;
+      display: block;
+      color: #222;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px;
+      margin: 15px 0;
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      font-size: 1em;
+      color: #000;
+      outline: none;
+      transition: all 0.3s ease;
+      opacity: 1;
+    }
+
+    .btn {
+      margin-top: 20px;
+      padding: 15px;
+      width: 100%;
+      background: #000;
+      color: #fff;
+      font-size: 1em;
+      font-weight: bold;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .btn:hover {
+      background: #333;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .shake {
+      animation: shake 0.5s ease-in-out;
+      border-color: red !important;
+      box-shadow: 0 0 8px red;
+    }
+
+    .fadeOut {
+      animation: fadeOut 0.5s forwards;
+    }
+
+    .fadeInSlide {
+      animation: fadeInSlide 0.7s ease-out forwards;
+    }
+
+    .success-icon {
+      font-size: 2em;
+      color: green;
+      animation: pulse 0.8s ease-in-out;
+    }
+
+    #discordLogin {
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+    }
+
+    #discordLogin.show {
+      pointer-events: auto;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+      100% { transform: translateX(0); }
+    }
+
+    @keyframes fadeOut {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.95); }
+    }
+
+    @keyframes fadeInSlide {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <div class="logo">TAPPEDIN.NL <span>BUDU</span></div>
+
+    <div id="formSection">
+      <input type="password" id="adminKey" placeholder="Enter Admin Key" />
+      <button class="btn" onclick="checkKey()">Unlock Discord Login</button>
+    </div>
+
+    <div id="successSection" class="hidden">
+      <div class="success-icon">✅</div>
+      <p>Access Granted. Proceed:</p>
+    </div>
+
+    <div id="discordLogin">
+      <button class="btn" onclick="loginWithDiscord()">Login with Discord</button>
+    </div>
+  </div>
+
+  <script>
+    const correctKey = "12345";
+
+    function checkKey() {
+      const input = document.getElementById('adminKey');
+      const formSection = document.getElementById('formSection');
+      const successSection = document.getElementById('successSection');
+      const discordLogin = document.getElementById('discordLogin');
+
+      input.classList.remove("shake");
+
+      if (input.value === correctKey) {
+        // Animate input away
+        formSection.classList.add("fadeOut");
+        setTimeout(() => {
+          formSection.classList.add("hidden");
+          successSection.classList.remove("hidden");
+          successSection.classList.add("fadeInSlide");
+
+          // Show Discord login with delay
+          setTimeout(() => {
+            discordLogin.classList.add("show");
+            discordLogin.classList.add("fadeInSlide");
+          }, 600);
+        }, 500);
+      } else {
+        input.classList.add("shake");
+        setTimeout(() => input.classList.remove("shake"), 600);
+      }
+    }
+
+    function loginWithDiscord() {
+      const clientId = "1360906719634522200";
+      const scope = "identify guilds";
+      const responseType = "token";
+
+      // Haal de juiste redirect URI op van de server
+      fetch('/oauth2/redirect_uri')
+        .then(resp => resp.json())
+        .then(data => {
+          const redirectUri = encodeURIComponent(data.redirect_uri);
+          const discordOAuthUrl = `https://discord.com/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}`;
+          window.location.href = discordOAuthUrl;
+        })
+        .catch(() => {
+          alert("Kon redirect URI niet ophalen van de server.");
+        });
+    }
+  </script>
+  <script>
+    // DASHBOARD LOGIC
+    // Check if adminKey is in localStorage and show dashboard if so
+    document.addEventListener("DOMContentLoaded", function() {
+      const adminKey = localStorage.getItem("adminKey");
+      if (adminKey) {
+        showDashboard(adminKey);
+      }
+    });
+
+    function showDashboard(adminKey) {
+      // Remove login UI
+      document.body.innerHTML = `
+        <div class="dashboard-container">
+          <div class="dashboard-header">
+            <h2>Admin Dashboard</h2>
+            <button class="logout-btn" onclick="logout()">Uitloggen</button>
+          </div>
+          <div id="dashboardContent">
+            <div class="loading">Laden...</div>
+          </div>
+        </div>
+      `;
+      // Add dashboard styles
+      const style = document.createElement('style');
+      style.innerHTML = `
+        .dashboard-container {
+          max-width: 700px;
+          margin: 40px auto;
+          background: #fffbe9;
+          border-radius: 18px;
+          box-shadow: 0 8px 32px 0 rgba(31,38,135,0.13);
+          padding: 32px 28px 28px 28px;
+        }
+        .dashboard-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 18px;
+        }
+        .dashboard-header h2 {
+          margin: 0;
+          color: #222;
+        }
+        .logout-btn {
+          background: #ff4d4f;
+          color: #fff;
+          border: none;
+          border-radius: 8px;
+          padding: 8px 18px;
+          font-size: 1em;
+          cursor: pointer;
+          font-weight: 600;
+          transition: background 0.2s;
+        }
+        .logout-btn:hover {
+          background: #d9363e;
+        }
+        .dashboard-form label {
+          font-weight: 500;
+          margin-top: 12px;
+          display: block;
+          color: #222;
+        }
+        .dashboard-form input, .dashboard-form textarea {
+          width: 100%;
+          padding: 10px;
+          border-radius: 7px;
+          border: 1px solid #ddd;
+          margin-top: 4px;
+          margin-bottom: 10px;
+          font-size: 1em;
+        }
+        .dashboard-form button {
+          background: linear-gradient(90deg, #6c63ff 0%, #48c6ef 100%);
+          color: #fff;
+          border: none;
+          border-radius: 8px;
+          padding: 12px 0;
+          font-size: 1.1rem;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 2px 8px #6c63ff44;
+          transition: background 0.2s, transform 0.1s;
+          width: 100%;
+        }
+        .dashboard-form button:hover {
+          background: linear-gradient(90deg, #48c6ef 0%, #6c63ff 100%);
+        }
+        .success-msg {
+          color: #2ecc40;
+          margin-bottom: 10px;
+        }
+        .error-msg {
+          color: #ff4d4f;
+          margin-bottom: 10px;
+        }
+        .loading {
+          color: #888;
+          font-size: 1.1em;
+        }
+      `;
+      document.head.appendChild(style);
+
+      // Fetch settings
+      fetch('/settings', {
+        headers: { 'X-API-Key': adminKey }
+      })
+      .then(resp => {
+        if (!resp.ok) throw new Error("Ongeldige admin key of geen verbinding.");
+        return resp.json();
+      })
+      .then(settings => {
+        renderSettingsForm(settings, adminKey);
+      })
+      .catch(err => {
+        document.getElementById('dashboardContent').innerHTML = `<div class="error-msg">${err.message}</div>`;
+      });
+    }
+
+    function renderSettingsForm(settings, adminKey) {
+      const content = document.getElementById('dashboardContent');
+      content.innerHTML = `
+        <form class="dashboard-form" id="settingsForm">
+          <div class="success-msg" id="successMsg" style="display:none;"></div>
+          <div class="error-msg" id="errorMsg" style="display:none;"></div>
+          <label>JURY_IDS (komma-gescheiden user IDs)</label>
+          <input type="text" name="JURY_IDS" value="${settings.JURY_IDS ? settings.JURY_IDS.join(',') : ''}" />
+          <label>SIGNUP_ANNOUNCE_CHANNEL_ID</label>
+          <input type="text" name="SIGNUP_ANNOUNCE_CHANNEL_ID" value="${settings.SIGNUP_ANNOUNCE_CHANNEL_ID || ''}" />
+          <label>FEEDBACK_CHANNEL_ID</label>
+          <input type="text" name="FEEDBACK_CHANNEL_ID" value="${settings.FEEDBACK_CHANNEL_ID || ''}" />
+          <label>START_CHANNEL_ID</label>
+          <input type="text" name="START_CHANNEL_ID" value="${settings.START_CHANNEL_ID || ''}" />
+          <label>DRIVE_LINK</label>
+          <input type="text" name="DRIVE_LINK" value="${settings.DRIVE_LINK || ''}" />
+          <label>SUGGESTIONS_CHANNEL_ID</label>
+          <input type="text" name="SUGGESTIONS_CHANNEL_ID" value="${settings.SUGGESTIONS_CHANNEL_ID || ''}" />
+          <button type="submit">Opslaan</button>
+        </form>
+      `;
+      document.getElementById('settingsForm').onsubmit = function(e) {
+        e.preventDefault();
+        document.getElementById('successMsg').style.display = "none";
+        document.getElementById('errorMsg').style.display = "none";
+        const form = e.target;
+        const data = {
+          JURY_IDS: form.JURY_IDS.value.split(',').map(x => x.trim()).filter(Boolean).map(Number),
+          SIGNUP_ANNOUNCE_CHANNEL_ID: Number(form.SIGNUP_ANNOUNCE_CHANNEL_ID.value),
+          FEEDBACK_CHANNEL_ID: Number(form.FEEDBACK_CHANNEL_ID.value),
+          START_CHANNEL_ID: Number(form.START_CHANNEL_ID.value),
+          DRIVE_LINK: form.DRIVE_LINK.value,
+          SUGGESTIONS_CHANNEL_ID: Number(form.SUGGESTIONS_CHANNEL_ID.value)
+        };
+        fetch('/settings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': adminKey
+          },
+          body: JSON.stringify(data)
+        })
+        .then(resp => resp.json())
+        .then(resp => {
+          if (resp.status === "ok") {
+            document.getElementById('successMsg').textContent = "Instellingen opgeslagen!";
+            document.getElementById('successMsg').style.display = "block";
+          } else {
+            throw new Error("Onbekende fout bij opslaan.");
+          }
+        })
+        .catch(err => {
+          document.getElementById('errorMsg').textContent = err.message;
+          document.getElementById('errorMsg').style.display = "block";
+        });
+      };
+    }
+
+    function logout() {
+      localStorage.removeItem('adminKey');
+      window.location.reload();
+    }
+  </script>
+</body>
+</html>
