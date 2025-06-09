@@ -163,43 +163,12 @@
   </div>
 
   <script>
-    const correctKey = "12345";
-
-    function checkKey() {
-      const input = document.getElementById('adminKey');
-      const formSection = document.getElementById('formSection');
-      const successSection = document.getElementById('successSection');
-      const discordLogin = document.getElementById('discordLogin');
-
-      input.classList.remove("shake");
-
-      if (input.value === correctKey) {
-        // Animate input away
-        formSection.classList.add("fadeOut");
-        setTimeout(() => {
-          formSection.classList.add("hidden");
-          successSection.classList.remove("hidden");
-          successSection.classList.add("fadeInSlide");
-
-          // Show Discord login with delay
-          setTimeout(() => {
-            discordLogin.classList.add("show");
-            discordLogin.classList.add("fadeInSlide");
-          }, 600);
-        }, 500);
-      } else {
-        input.classList.add("shake");
-        setTimeout(() => input.classList.remove("shake"), 600);
-      }
-    }
-
     function loginWithDiscord() {
       const clientId = "1360906719634522200";
       const scope = "identify guilds";
-      const responseType = "token";
-
+      const responseType = "code";
       // Haal de juiste redirect URI op van de server
-      fetch('/oauth2/redirect_uri')
+      fetch('https://45.136.141.74:8000/oauth2/redirect_uri')
         .then(resp => resp.json())
         .then(data => {
           const redirectUri = encodeURIComponent(data.redirect_uri);
@@ -210,14 +179,30 @@
           alert("Kon redirect URI niet ophalen van de server.");
         });
     }
-  </script>
-  <script>
-    // DASHBOARD LOGIC
-    // Check if adminKey is in localStorage and show dashboard if so
+
+    // Na redirect van Discord: check of er een ?code=... in de URL staat
     document.addEventListener("DOMContentLoaded", function() {
-      const adminKey = localStorage.getItem("adminKey");
-      if (adminKey) {
-        showDashboard(adminKey);
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get("code");
+      if (code) {
+        // Stuur code naar backend voor verificatie
+        fetch('https://45.136.141.74:8000/oauth2/token', {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code })
+        })
+        .then(resp => resp.json())
+        .then(data => {
+          if (data.user && data.user.id) {
+            // Toegang toegestaan, toon dashboard
+            showDashboard("adminKeyFromDiscordLogin");
+          } else {
+            alert(data.error || "Geen toegang tot dashboard.");
+          }
+        })
+        .catch(() => {
+          alert("Verificatie bij backend mislukt.");
+        });
       }
     });
 
@@ -390,8 +375,7 @@
     }
 
     function logout() {
-      localStorage.removeItem('adminKey');
-      window.location.reload();
+      window.location.href = "/"; // Gewoon terug naar login
     }
   </script>
 </body>
